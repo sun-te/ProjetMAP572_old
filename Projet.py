@@ -9,7 +9,7 @@ This is a temporary script file.
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
-N = 30
+
 class grapheG:
     def __init__(self,n):
         self.n=n
@@ -172,6 +172,7 @@ class grapheG:
         plt.show()
             
 #%%    
+N = 30
 test=grapheG(N)
 
 test.Visual()
@@ -182,22 +183,6 @@ test.GPF()
 
 #%%
 
-def Gradiant(test,epsilon):
-    pos=test.pos
-    l=len(pos)
-    res=np.zeros([l,2])
-    increment=np.zeros([l,2])
-    E0=test.Energy(pos)
-    
-    for i in range(l):
-        increment[i,0]=epsilon
-        res[i,0]=(test.Energy(pos+increment)-E0)/epsilon
-        increment[i,0]=0
-        increment[i,1]=epsilon
-        res[i,1]=(test.Energy(pos+increment)-E0)/epsilon
-    #res=
-    return       
-        
         
     
     
