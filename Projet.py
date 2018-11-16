@@ -1,13 +1,12 @@
-
 # -*- coding: utf-8 -*-
 """
 Spyder Editor
-
 This is a temporary script file.
 """
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 #%%
 
 class grapheG:
@@ -123,17 +122,27 @@ class grapheG:
     def GPO(self,itermax=1000,tol=1.e-4):
         
         x0=self.Two2One(self.pos)
+        
         residu=np.inf
         iteration=0
         d=1.e-4
+        time0=time.time()
         grad0=self.Gradiant_1d(x0)
+        print("time gradient: ", time.time()-time0)
+        time0=time.time()
         E0=self.Energy(self.pos)
-        
+        print("time Energy: ", time.time()-time0)
         while (iteration<itermax and residu>tol):
             iteration+=1
             x1=x0-d*(grad0)
+            
+            time0=time.time()
             grad1=self.Gradiant_1d(x1)
+            print("Iteration: ", iteration, " Time gradient: ", time.time()-time0)
+            time0=time.time()
             E1=self.Energy(self.One2Two(x1))
+            print("Time gradient: ", time.time()-time0)
+            
             residu=np.abs(E1-E0)
             
             dp=(x1-x0)
@@ -145,12 +154,12 @@ class grapheG:
             x0=x1
             E0=E1
             
-            if(iteration%2==0):
+            if(iteration%3==0):
                 print(iteration, residu,d)
                 
-                #if(iteration%200==0):
-                self.pos=self.One2Two(x1)
-                self.Visual()
+                if(iteration%6==0):
+                    self.pos=self.One2Two(x1)
+                    self.Visual()
             
         print(iteration, residu,d)        
         self.pos=self.One2Two(x1)
@@ -172,19 +181,13 @@ class grapheG:
         plt.show()
             
 #%%    
-N = 30
+N = 20
 test=grapheG(N)
 
 test.Visual()
 a=test.Distance()
 test.Energy(test.pos)
-test.GPF()
+test.GPO()
 #%%
 
 #%%
-
-        
-    
-    
-    
-    
