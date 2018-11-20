@@ -60,7 +60,8 @@ class grapheG:
         tmp=self.Distance()
         self.distance=tmp
         
-       
+    def Initial_with_A(self, A):
+        self.adjacence=A
     def Adjacence(self):
 
         return self.adjacence;
