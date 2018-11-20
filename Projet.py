@@ -13,11 +13,15 @@ import matplotlib.pyplot as plt
 class grapheG:
     def __init__(self,n):
         self.n=n
-        self.adjacence=np.zeros((n,n))       
+        self.adjacence=np.zeros((n,n))   
+        #direction of the edge: from point V to its precedor
+        self.edge=np.zeros((n,1))
         self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
         matrice=self.adjacence
         matrice[0,0]=1;
         degree=np.array([1])
+        
+        '''
         for i in range(1,self.n):
             proba=np.cumsum(degree/(2*i-1))
             flag=np.random.uniform(0,1)
@@ -29,13 +33,40 @@ class grapheG:
             matrice[v,i]=1;
             degree=np.sum(matrice,axis=0)
         self.adjacence=matrice 
+        '''
+        #Variante
+        #Si le degree est plus grand que 2:
+        #P'-P
+        # x= degree
+        #=\frac{(2k-1)(x+\delta) -x(2k-1+k\delta)}{(2k-1+k\delta) \times (2k-1) }
+        #=\frac{((2-x)k-1)\}{(2k-1+k\delta) \times (2k-1) }
+        # if delta <0, on a renforc\'e 贫富差距
+        # if delta >0, we have reduced the 贫富差距
+        delta=10.
+        for i in range(1,self.n):
+            proba=np.cumsum((degree+delta)/(2*i-1+i*delta))
+            flag=np.random.uniform(0,1)
+            for j in range(len(proba)):
+                if(flag<=proba[j]):
+                    v=j
+                    break;
+            self.edge[v]=i;
+            matrice[i,v]=1;
+            matrice[v,i]=1;
+            degree=np.sum(matrice,axis=0)
+        self.adjacence=matrice 
         
-        
+       
     def Adjacence(self):
 
         return self.adjacence;
     
-   
+    def RenomalisedAdjacence(self):
+        matrix=self.adjacence.copy()
+        degree=np.sum(matrix,0)
+        for i in range(len(matrix)):
+            matrix[i,:]/=degree[i];
+        return matrix
 
     def Distance(self):
         n=self.n
@@ -62,9 +93,16 @@ class grapheG:
         matrix_distance=self.Distance()
         E=0
         max_d=np.max(matrix_distance)
+        #coeff_peni=10
+        #prefered_distance=0.1
         for i in range(n):
             for j in range(n):
-                E+=(np.linalg.norm(p[i]-p[j])/np.sqrt(2)-matrix_distance[i,j])**2
+                norm2=np.linalg.norm(p[i]-p[j])
+                E+=(norm2/np.sqrt(2)-matrix_distance[i,j])**2
+                #if(norm2<prefered_distance):
+                #    E+=norm2*coeff_peni
+                #if(norm2>1-prefered_distance):
+                #    E+=norm2*coeff_peni
         E/=max_d**2
         return E
 
@@ -146,7 +184,7 @@ class grapheG:
             E0=E1
             
             if(iteration%2==0):
-                print(iteration, residu,d)
+                print("iteration, residu, d(步长): ",iteration, residu,d)
                 
                 #if(iteration%200==0):
                 self.pos=self.One2Two(x1)
@@ -166,25 +204,157 @@ class grapheG:
                     edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
         for i in range(len(edge)):
             plt.plot(*edge[i])
-        plt.scatter(pos.T[0],pos.T[1])
-        for i in range(self.n):
-            plt.annotate(s=i ,xy=(pos[i]))
+        #plt.scatter(pos.T[0],pos.T[1])
+        #for i in range(self.n):
+        #    plt.annotate(s=i ,xy=(pos[i]))
         plt.show()
+    def VisualCluster(self,dict_cluster_index):
+        plt.figure(figsize=[8,8])
+        pos = self.pos#np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+        edge = []
+        for i in range(self.n):
+            for j in range(i,self.n):
+                if (self.adjacence[i,j] == 1):
+                    edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
+        for i in range(len(edge)):
+            plt.plot(*edge[i],color='blue')
+            
+        colors=['red','blue','green','yellow','purple','brown','black']
+        i=0
+        
+    
+        for key in dict_cluster_index.keys():
+            
+            for p in dict_cluster_index[key]:
+                plt.scatter(self.pos[p][0],test.pos[p][1],color=colors[i])
+            i+=1;
+        #plt.scatter(pos.T[0],pos.T[1])
+
+
+#%%
+'''
+tool function
+'''
+def k_means(k,data,iter_max=10000):
+    n,p=data.shape
+    choix=np.random.randint(low=0,high=n,size=k)
+    center0=[]
+    
+    for i in range(k):
+        
+        center0+=[data[choix[i]]]
+    
+    it=0
+    
+    while  it<=iter_max:
+        #err_last=err_now
+        err_now=0
+        it+=1
+        dict_clus={}
+        dict_clus_index={}
+        for i in range(k):
+            dict_clus[i]=[]
+            dict_clus_index[i]=[]
+            
+        for i in range(n):
+            cluster=-1
+            min_dis=np.inf
+            for j in range(len(center0)):
+                dis=np.linalg.norm(data[i]-center0[j])
+                if(dis<min_dis):
+                    min_dis=dis
+                    cluster=j
+            err_now+=min_dis
+            
+            dict_clus_index[cluster].append(i)
+            dict_clus[cluster].append(data[i])
+        center1=[]
+        for key in dict_clus:
+            
+            len_cluster=len(dict_clus[key])
+            if(len_cluster==0):
+                continue
+            center1+=[sum(dict_clus[key])/len_cluster]
+        #print(len(center0))
+        if(len(center0)==len(center1) and np.linalg.norm(np.array(center0)-np.array(center1))==0.0):
+            print("OK")
+            break;
+        #print(center0)
+        center0=center1.copy()
+        
+        
+        if(len(center0)!=k):
+            choix=np.random.randint(low=0,high=n,size=k)
+            center0=[]
+            
+            for i in range(k):
+                
+                center0+=[data[choix[i]]]
+                
+        print(len(center0))
+        
+
+        
+           
+    return dict_clus,dict_clus_index     
+def UnnormSpectralCluster( k,graph):
+    W=graph.adjacence
+    n=len(W)
+    s=np.sum(W,0)
+    D=np.zeros((n,n))
+    for i in range(n):
+        D[i,i]=s[i]
+    L=D-W
+    temp=np.linalg.eig(L)
+    vector= np.real(temp[1])
+    U=vector[:,0:k]
+    dict_cluster_y, dict_cluster_index=k_means(k,U)
+    for k in dict_cluster_index.keys():
+        print(len(dict_cluster_index[k]))
+    colors=['red','blue','green','brown','yellow','purple','black']
+    i=0
+    plt.figure(figsize=[10,10])
+
+    for key in dict_cluster_index.keys():
+        
+        for p in dict_cluster_index[key]:
+            plt.scatter(graph.pos[p][0],test.pos[p][1],color=colors[i])
+        i+=1;
+
+    return;
             
 #%%    
-N = 30
+N =20
 test=grapheG(N)
 
 test.Visual()
 a=test.Distance()
 test.Energy(test.pos)
-test.GPF()
-#%%
+test.GPO(tol=1.e-3)
+UnnormSpectralCluster(4,test)
 
 #%%
+'''Part 3'''
+MatriceAdjacence=np.loadtxt('StochasticBlockModel.txt')
 
-        
+#%%
+'''Part 4'''
+
+def Scores(A,eps,tol=1.e-6):
+    n=len(A)
+    Pe=(1-eps)*A+np.ones([n,n])*eps/n
+    tup=np.linalg.eig(Pe)
+    values=np.real(tup[0])
+    vectors=np.real(tup[1].T)
+    for i in range(len(values)):
+        if(np.abs(values[i]-1)<=tol):
+            index=i;
     
+    return vectors[index]
+
+A=test.RenomalisedAdjacence()
+#for eps in [0,1.e-3, 1.e-2, 1.e-1,5.e-1]:
+    #print(Scores(A,eps))
     
     
     
