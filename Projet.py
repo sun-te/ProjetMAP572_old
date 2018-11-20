@@ -6,12 +6,27 @@ Spyder Editor
 This is a temporary script file.
 """
 #%%
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
 
 class grapheG:
-    def __init__(self,n):
+    def __init__(self):
+        n=1
+        self.n=n
+        self.adjacence=np.zeros((n,n))   
+        
+        self.edge=np.zeros((n,1))
+        self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+        self.distance=np.zeros([n,n])
+        
+    '''
+    edge direction version and initialization with n
+    direction of the edge: from point V to its precedor
+    '''    
+    def Initial_with_n(self,n,delta=0):
+        
         self.n=n
         self.adjacence=np.zeros((n,n))   
         #direction of the edge: from point V to its precedor
@@ -22,29 +37,6 @@ class grapheG:
         matrice[0,0]=1;
         degree=np.array([1])
         
-        
-        '''
-        for i in range(1,self.n):
-            proba=np.cumsum(degree/(2*i-1))
-            flag=np.random.uniform(0,1)
-            for j in range(len(proba)):
-                if(flag<=proba[j]):
-                    v=j
-                    break;
-            matrice[i,v]=1;
-            matrice[v,i]=1;
-            degree=np.sum(matrice,axis=0)
-        self.adjacence=matrice 
-        '''
-        #Variante
-        #Si le degree est plus grand que 2:
-        #P'-P
-        # x= degree
-        #=\frac{(2k-1)(x+\delta) -x(2k-1+k\delta)}{(2k-1+k\delta) \times (2k-1) }
-        #=\frac{((2-x)k-1)\}{(2k-1+k\delta) \times (2k-1) }
-        # if delta <0, on a renforc\'e 贫富差距
-        # if delta >0, we have reduced the 贫富差距
-        delta=10.
         for i in range(1,self.n):
             proba=np.cumsum((degree+delta)/(2*i-1+i*delta))
             flag=np.random.uniform(0,1)
@@ -60,8 +52,15 @@ class grapheG:
         tmp=self.Distance()
         self.distance=tmp
         
+    '''this does not contain edge direction'''   
     def Initial_with_A(self, A):
         self.adjacence=A
+        self.n=len(A)
+        tmp=self.Distance()
+        self.distance=tmp
+        
+        self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+       
     def Adjacence(self):
 
         return self.adjacence;
@@ -99,7 +98,8 @@ class grapheG:
         tmp=self.adjacence.copy()
         matrix_dis=tmp.copy()
         dis=1
-        matrix_dis[0,0]=0
+        for i in range(n):
+            matrix_dis[0,0]=0
         for it in range(n):
             dis+=1
             tmp=np.dot(tmp,A)
@@ -217,7 +217,7 @@ class grapheG:
             x0=x1
             E0=E1
             
-            if(iteration%2==0):
+            if(iteration%50==0):
                 print("iteration, residu, d(步长): ",iteration, residu,d)
                 
                 #if(iteration%200==0):
@@ -238,9 +238,9 @@ class grapheG:
                     edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
         for i in range(len(edge)):
             plt.plot(*edge[i])
-        plt.scatter(pos.T[0],pos.T[1])
-        for i in range(self.n):
-            plt.annotate(s=i ,xy=(pos[i]))
+        #plt.scatter(pos.T[0],pos.T[1])
+        #for i in range(self.n):
+        #    plt.annotate(s=i ,xy=(pos[i]))
         plt.show()
     def VisualCluster(self,dict_cluster_index):
         plt.figure(figsize=[8,8])
@@ -260,23 +260,23 @@ class grapheG:
         for key in dict_cluster_index.keys():
             
             for p in dict_cluster_index[key]:
-                plt.scatter(self.pos[p][0],test.pos[p][1],color=colors[i])
+                plt.scatter(self.pos[p][0],self.pos[p][1],color=colors[i])
             i+=1;
         plt.scatter(pos.T[0],pos.T[1])
 
 
 #%%
 '''
-tool function
+part 3
 '''
 def k_means(k,data,iter_max=10000):
     n,p=data.shape
     choix=np.random.randint(low=0,high=n,size=k)
-    center0=[]
+    center0=data[:k]
     
-    for i in range(k):
+    #for i in range(k):
         
-        center0+=[data[choix[i]]]
+    #    center0+=[data[choix[i]]]
     
     it=0
     
@@ -317,44 +317,71 @@ def k_means(k,data,iter_max=10000):
         center0=center1.copy()
         
         
-        if(len(center0)!=k):
-            choix=np.random.randint(low=0,high=n,size=k)
-            center0=[]
+        #if(len(center0)!=k):
+            #choix=np.random.randint(low=0,high=n,size=k)
+        #    center0=data[:k]
             
-            for i in range(k):
+        #    for i in range(k):
                 
-                center0+=[data[choix[i]]]
+         #       center0+=[data[choix[i]]]
                 
         print(len(center0))
         
 
         
            
-    return dict_clus,dict_clus_index     
+    return dict_clus,dict_clus_index    
+ 
 def UnnormSpectralCluster( k,graph):
     W=graph.adjacence
     n=len(W)
+    
     s=np.sum(W,0)
+    
     D=np.zeros((n,n))
     for i in range(n):
         D[i,i]=s[i]
+        
     L=D-W
     temp=np.linalg.eig(L)
-    vector= np.real(temp[1])
-    U=vector[:,0:k]
+    
+    value,vector= np.real(temp[0]),np.real(temp[1])
+    
+    index=range(n)
+    for i in range(n):
+        for j in range(i+1,n):
+            if(value[i]>value[j]):
+                temp=value[i]
+                value[i]=value[j]
+                value[j]=temp
+                vector[:,i],vector[:,j]=vector[:,j],vector[:,i]
+    U=vector[:,:k]
+    
     dict_cluster_y, dict_cluster_index=k_means(k,U)
     for k in dict_cluster_index.keys():
         print(len(dict_cluster_index[k]))
-    colors=['red','blue','green','brown','yellow','purple','black']
-    i=0
+    colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
+    
     plt.figure(figsize=[10,10])
-
+    
+    pos = graph.pos#np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+    edge = []
+    for i in range(graph.n):
+        for j in range(i,graph.n):
+            if (graph.adjacence[i,j] == 1):
+                edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
+    for i in range(len(edge)):
+        plt.plot(*edge[i],color='black')    
+        
+    i=0   
     for key in dict_cluster_index.keys():
         
         for p in dict_cluster_index[key]:
-            plt.scatter(graph.pos[p][0],test.pos[p][1],color=colors[i])
+            plt.scatter(graph.pos[p][0],graph.pos[p][1],color=colors[i])
         i+=1;
-
+        
+    
+    plt.show()   
     return;
 
     

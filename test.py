@@ -8,32 +8,30 @@ Created on Tue Nov 20 14:50:21 2018
 import scipy as sp
 from scipy.optimize import  minimize
 from Projet import grapheG
-
-#%%
-def Gradient_py(graph):
-    x0=graph.Two2One(graph.pos)
-    residu=np.inf
-    iteration=0
-    d=1.e-4
-    grad0=graph.Gradiant_1d(x0)
-    E0=graph.Energy(graph.pos)
-    
-    minimize()
-            
+from Projet import UnnormSpectralCluster
+import numpy as np
 #%%    
-N =100
+N =200
 
-test=grapheG(N)
+graph=grapheG()
+graph.Initial_with_n(N,delta=10)
 
-test.Visual()
-a=test.Distance()
-test.Energy(test.pos)
-test.GPO(tol=1.e-3)
-#UnnormSpectralCluster(4,test)
+graph.Visual()
+a=graph.Distance()
+graph.Energy(graph.pos)
+graph.GPO(tol=1.e-3)
+
+UnnormSpectralCluster(5,graph)
 
 #%%
 '''Part 3'''
 MatriceAdjacence=np.loadtxt('StochasticBlockModel.txt')
+
+graph1=grapheG()
+graph1.Initial_with_A(MatriceAdjacence)
+graph1.Visual()
+
+
 
 #%%
 '''Part 4'''
