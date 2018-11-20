@@ -17,9 +17,11 @@ class grapheG:
         #direction of the edge: from point V to its precedor
         self.edge=np.zeros((n,1))
         self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+        
         matrice=self.adjacence
         matrice[0,0]=1;
         degree=np.array([1])
+        
         
         '''
         for i in range(1,self.n):
@@ -55,6 +57,8 @@ class grapheG:
             matrice[v,i]=1;
             degree=np.sum(matrice,axis=0)
         self.adjacence=matrice 
+        tmp=self.Distance()
+        self.distance=tmp
         
        
     def Adjacence(self):
@@ -67,8 +71,8 @@ class grapheG:
         for i in range(len(matrix)):
             matrix[i,:]/=degree[i];
         return matrix
-
-    def Distance(self):
+    
+    def Distance_physque(self):
         n=self.n
         pos=self.pos
         matrix_ref=np.zeros([n,n])
@@ -88,22 +92,47 @@ class grapheG:
                     if(matrix_dis[i,j]>dis):
                         matrix_dis[i,j]=dis
         return matrix_dis;
+    def Distance(self):
+        n=self.n
+        A=self.adjacence.copy()
+        tmp=self.adjacence.copy()
+        matrix_dis=tmp.copy()
+        dis=1
+        matrix_dis[0,0]=0
+        for it in range(n):
+            dis+=1
+            tmp=np.dot(tmp,A)
+            flag=1
+            for i in range(n):
+                
+                for j in range(n):
+                    if(i!=j and matrix_dis[i,j]==0 and tmp[i,j]!=0):
+                        matrix_dis[i,j]=dis
+                        flag=0
+            if(flag==1):
+                break;        
+        return matrix_dis
+        
+        
+        
     def Energy(self,p):
         n=self.n
-        matrix_distance=self.Distance()
-        E=0
+        
+        matrix_distance=self.distance
         max_d=np.max(matrix_distance)
-        #coeff_peni=10
-        #prefered_distance=0.1
+        matrix_distance=matrix_distance/max_d
         for i in range(n):
-            for j in range(n):
-                norm2=np.linalg.norm(p[i]-p[j])
-                E+=(norm2/np.sqrt(2)-matrix_distance[i,j])**2
-                #if(norm2<prefered_distance):
-                #    E+=norm2*coeff_peni
-                #if(norm2>1-prefered_distance):
-                #    E+=norm2*coeff_peni
-        E/=max_d**2
+            matrix_distance[i,i]=1
+        x=np.array([p[:,0]])
+        Xminus=(x.T-x)**2
+        y=np.array([p[:,1]])
+        Yminus=(y.T-y)**2
+        
+        B=np.sqrt(Xminus+Yminus)/np.sqrt(2)
+        M=matrix_distance
+        temp=(B-M)/M
+        
+        E=np.sum(temp*temp)
         return E
 
     def Gradiant(self,pos,epsilon=1.e-4):
@@ -139,7 +168,7 @@ class grapheG:
                 self.Visual()
         self.pos=pos1
         self.Visual()
-        
+    
     def One2Two(self,x):
         l=int(len(x)/2)
         res=np.array([x[0:l],x[l:]]).T
@@ -158,6 +187,10 @@ class grapheG:
             grad[i]=(self.Energy(self.One2Two(x+increment))-E0)/epsilon
 
         return grad
+    
+        
+    
+    
     def GPO(self,itermax=1000,tol=1.e-4):
         
         x0=self.Two2One(self.pos)
@@ -204,9 +237,9 @@ class grapheG:
                     edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
         for i in range(len(edge)):
             plt.plot(*edge[i])
-        #plt.scatter(pos.T[0],pos.T[1])
-        #for i in range(self.n):
-        #    plt.annotate(s=i ,xy=(pos[i]))
+        plt.scatter(pos.T[0],pos.T[1])
+        for i in range(self.n):
+            plt.annotate(s=i ,xy=(pos[i]))
         plt.show()
     def VisualCluster(self,dict_cluster_index):
         plt.figure(figsize=[8,8])
@@ -228,7 +261,7 @@ class grapheG:
             for p in dict_cluster_index[key]:
                 plt.scatter(self.pos[p][0],test.pos[p][1],color=colors[i])
             i+=1;
-        #plt.scatter(pos.T[0],pos.T[1])
+        plt.scatter(pos.T[0],pos.T[1])
 
 
 #%%
@@ -322,39 +355,6 @@ def UnnormSpectralCluster( k,graph):
         i+=1;
 
     return;
-            
-#%%    
-N =20
-test=grapheG(N)
 
-test.Visual()
-a=test.Distance()
-test.Energy(test.pos)
-test.GPO(tol=1.e-3)
-UnnormSpectralCluster(4,test)
-
-#%%
-'''Part 3'''
-MatriceAdjacence=np.loadtxt('StochasticBlockModel.txt')
-
-#%%
-'''Part 4'''
-
-def Scores(A,eps,tol=1.e-6):
-    n=len(A)
-    Pe=(1-eps)*A+np.ones([n,n])*eps/n
-    tup=np.linalg.eig(Pe)
-    values=np.real(tup[0])
-    vectors=np.real(tup[1].T)
-    for i in range(len(values)):
-        if(np.abs(values[i]-1)<=tol):
-            index=i;
-    
-    return vectors[index]
-
-A=test.RenomalisedAdjacence()
-#for eps in [0,1.e-3, 1.e-2, 1.e-1,5.e-1]:
-    #print(Scores(A,eps))
-    
     
     
