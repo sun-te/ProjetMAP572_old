@@ -7,11 +7,11 @@ Created on Tue Nov 20 14:50:21 2018
 
 import scipy as sp
 from scipy.optimize import  minimize
-from Projet import grapheG
-from Projet import UnnormSpectralCluster
+from Graphe import grapheG
+from Part3 import Unnormalized,Normalized_sym
 import numpy as np
 #%%    
-N =200
+N =100
 
 graph=grapheG()
 graph.Initial_with_n(N,delta=10)
@@ -20,9 +20,9 @@ graph.Visual()
 a=graph.Distance()
 graph.Energy(graph.pos)
 graph.GPO(tol=1.e-3)
-
-UnnormSpectralCluster(5,graph)
-
+#%%
+cluster_un=Unnormalized(5,graph)
+cluster_n=Normalized_sym(5,graph)
 #%%
 '''Part 3'''
 MatriceAdjacence=np.loadtxt('StochasticBlockModel.txt')

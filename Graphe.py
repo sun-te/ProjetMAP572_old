@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Nov 20 20:37:33 2018
+
+@author: te.sun
+"""
+
 
 # -*- coding: utf-8 -*-
 """
@@ -6,7 +14,7 @@ Spyder Editor
 This is a temporary script file.
 """
 #%%
-import time
+#import time
 import numpy as np
 import matplotlib.pyplot as plt
 #%%
@@ -266,123 +274,6 @@ class grapheG:
 
 
 #%%
-'''
-part 3
-'''
-def k_means(k,data,iter_max=10000):
-    n,p=data.shape
-    choix=np.random.randint(low=0,high=n,size=k)
-    center0=data[:k]
-    
-    #for i in range(k):
-        
-    #    center0+=[data[choix[i]]]
-    
-    it=0
-    
-    while  it<=iter_max:
-        #err_last=err_now
-        err_now=0
-        it+=1
-        dict_clus={}
-        dict_clus_index={}
-        for i in range(k):
-            dict_clus[i]=[]
-            dict_clus_index[i]=[]
-            
-        for i in range(n):
-            cluster=-1
-            min_dis=np.inf
-            for j in range(len(center0)):
-                dis=np.linalg.norm(data[i]-center0[j])
-                if(dis<min_dis):
-                    min_dis=dis
-                    cluster=j
-            err_now+=min_dis
-            
-            dict_clus_index[cluster].append(i)
-            dict_clus[cluster].append(data[i])
-        center1=[]
-        for key in dict_clus:
-            
-            len_cluster=len(dict_clus[key])
-            if(len_cluster==0):
-                continue
-            center1+=[sum(dict_clus[key])/len_cluster]
-        #print(len(center0))
-        if(len(center0)==len(center1) and np.linalg.norm(np.array(center0)-np.array(center1))==0.0):
-            print("OK")
-            break;
-        #print(center0)
-        center0=center1.copy()
-        
-        
-        #if(len(center0)!=k):
-            #choix=np.random.randint(low=0,high=n,size=k)
-        #    center0=data[:k]
-            
-        #    for i in range(k):
-                
-         #       center0+=[data[choix[i]]]
-                
-        print(len(center0))
-        
-
-        
-           
-    return dict_clus,dict_clus_index    
- 
-def UnnormSpectralCluster( k,graph):
-    W=graph.adjacence
-    n=len(W)
-    
-    s=np.sum(W,0)
-    
-    D=np.zeros((n,n))
-    for i in range(n):
-        D[i,i]=s[i]
-        
-    L=D-W
-    temp=np.linalg.eig(L)
-    
-    value,vector= np.real(temp[0]),np.real(temp[1])
-    
-    index=range(n)
-    for i in range(n):
-        for j in range(i+1,n):
-            if(value[i]>value[j]):
-                temp=value[i]
-                value[i]=value[j]
-                value[j]=temp
-                vector[:,i],vector[:,j]=vector[:,j],vector[:,i]
-    U=vector[:,:k]
-    
-    dict_cluster_y, dict_cluster_index=k_means(k,U)
-    for k in dict_cluster_index.keys():
-        print(len(dict_cluster_index[k]))
-    colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
-    
-    plt.figure(figsize=[10,10])
-    
-    pos = graph.pos#np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
-    edge = []
-    for i in range(graph.n):
-        for j in range(i,graph.n):
-            if (graph.adjacence[i,j] == 1):
-                edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
-    for i in range(len(edge)):
-        plt.plot(*edge[i],color='black')    
-        
-    i=0   
-    for key in dict_cluster_index.keys():
-        
-        for p in dict_cluster_index[key]:
-            plt.scatter(graph.pos[p][0],graph.pos[p][1],color=colors[i])
-        i+=1;
-        
-    
-    plt.show()   
-    return;
 
     
     
