@@ -11,6 +11,8 @@ from Graphe import grapheG
 from Part3 import Unnormalized,Normalized_sym
 import numpy as np
 #%%    
+'''Part 3'''
+'''Question 3.1'''
 N =100
 
 graph=grapheG()
@@ -21,17 +23,51 @@ a=graph.Distance()
 graph.Energy(graph.pos)
 graph.GPO(tol=1.e-3)
 #%%
-cluster_un=Unnormalized(5,graph)
-cluster_n=Normalized_sym(5,graph)
+k=8
+cluster_un=Unnormalized(k,graph)
+cluster_n=Normalized_sym(k,graph)
 #%%
-'''Part 3'''
+
+'''Question 3.2'''
 MatriceAdjacence=np.loadtxt('StochasticBlockModel.txt')
 
-graph1=grapheG()
-graph1.Initial_with_A(MatriceAdjacence)
-graph1.Visual()
+graph=grapheG()
+graph.Initial_with_A(MatriceAdjacence)
+graph.Visual()
+#%%
+graph.GPO(tol=0.01)
+#%%
+k=3
+cluster_n=Normalized_sym(k,graph)
 
 
+
+#%%
+
+n=200
+K=3
+sommets=np.array(range(n))
+partition=np.zeros(n)
+
+for i in range(n):
+    partition[i]=np.random.randint(0,K)
+
+tmp=np.random.uniform(0,0.5,[K,K])
+Q=tmp+tmp.T
+Q=np.array([[0.8,0.02,0.2],[0.02,0.8,0.1],[0.2,0.1,0.8]])
+eps=0.01
+Q=np.ones([K,K])*eps
+Q=Q+np.eye(K)*(1-eps)
+#Q=np.array([[0.5,0.02,0.1,],[0.02,1]])
+print(Q)
+graph=grapheG()
+graph.Initial_StochasticBlockModel(partition,Q)
+
+#%%
+graph.GPO()
+graph.VisualCluster(partition)
+#%%
+cluster_n=Normalized_sym(3,graph)
 
 #%%
 '''Part 4'''

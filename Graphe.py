@@ -68,7 +68,26 @@ class grapheG:
         self.distance=tmp
         
         self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
-       
+   
+    def Initial_StochasticBlockModel(self,  partition,Q):
+        n=len(partition)
+        self.n=n
+        A=np.zeros([n,n])
+        for i in range(n):
+            r=int(partition[i])
+            A[i,i]=1
+            for j in range(i):
+                flag=np.random.uniform()
+                s=int(partition[j])
+                if(flag<Q[s,r]):
+                    A[i,j]=1
+                    A[j,i]=1
+                
+        self.adjacence=A
+        self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+        tmp=self.Distance()
+        self.distance=tmp        
+    
     def Adjacence(self):
 
         return self.adjacence;
@@ -107,7 +126,7 @@ class grapheG:
         matrix_dis=tmp.copy()
         dis=1
         for i in range(n):
-            matrix_dis[0,0]=0
+            matrix_dis[i,i]=0
         for it in range(n):
             dis+=1
             tmp=np.dot(tmp,A)
@@ -238,39 +257,32 @@ class grapheG:
 
     def Visual(self):
         plt.figure(figsize=[6,6])
-        pos = self.pos#np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
+        pos = self.pos
         edge = []
         for i in range(self.n):
             for j in range(i,self.n):
-                if (self.adjacence[i,j] == 1):
+                if (i!=j and self.adjacence[i,j] == 1):
                     edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
         for i in range(len(edge)):
             plt.plot(*edge[i])
-        #plt.scatter(pos.T[0],pos.T[1])
-        #for i in range(self.n):
-        #    plt.annotate(s=i ,xy=(pos[i]))
+        plt.scatter(pos.T[0],pos.T[1])
+        for i in range(self.n):
+            plt.annotate(s=i ,xy=(pos[i]))
         plt.show()
-    def VisualCluster(self,dict_cluster_index):
+    def VisualCluster(self,cluster):
         plt.figure(figsize=[8,8])
         pos = self.pos#np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
-        edge = []
-        for i in range(self.n):
-            for j in range(i,self.n):
-                if (self.adjacence[i,j] == 1):
-                    edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
-        for i in range(len(edge)):
-            plt.plot(*edge[i],color='blue')
+        #edge = []
+        #for i in range(self.n):
+       #     for j in range(i,self.n):
+       #         if (self.adjacence[i,j] == 1):
+       #             edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
+       # for i in range(len(edge)):
+       #     plt.plot(*edge[i],color='blue')
             
-        colors=['red','blue','green','yellow','purple','brown','black']
-        i=0
-        
-    
-        for key in dict_cluster_index.keys():
-            
-            for p in dict_cluster_index[key]:
-                plt.scatter(self.pos[p][0],self.pos[p][1],color=colors[i])
-            i+=1;
-        plt.scatter(pos.T[0],pos.T[1])
+        colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
+        for i in range(len(pos)):    
+            plt.scatter(pos[i][0],pos[i][1],color=colors[int(cluster[i])])
 
 
 #%%

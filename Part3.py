@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+
+    
+    #for i in range(k):
+        #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 20 20:40:40 2018
 
 @author: te.sun
 """
+import time
 from Graphe import grapheG
 import numpy as np
 import matplotlib.pyplot as plt
@@ -81,15 +86,14 @@ def K_MEANS(k,data):
     
     cluster=np.zeros(n)
     while(err>=1.e-7):
-        global_distance=0
         for i in range(n):
             min_dis=np.inf
             for j in range(k):
                 dis=np.linalg.norm(data[i]-center0[j])
+                
                 if(dis<min_dis):
                     min_dis=dis
                     cluster[i]=j
-            global_distance+=min_dis
         center1=np.zeros([k,p])
         for c in range(k):
             group=data[np.where(cluster==c)]
@@ -97,10 +101,15 @@ def K_MEANS(k,data):
                 print("The cluster for group "+str(c)+" is empty!")
                 continue;
             else:
-                center1[c]=np.mean(group)
+                center1[c]=np.mean(group,0)
         err=np.linalg.norm(center1-center0)
         
         center0=center1
+    global_distance=0
+
+    for i in range(n):
+        global_distance+=np.linalg.norm(data[i]-center1[int(cluster[i])])
+    print(global_distance)
     return cluster
                 
                     
@@ -195,14 +204,14 @@ def Unnormalized(k,graph):
     
     plt.figure(figsize=[10,10])
     
-    pos = graph.pos
-    edge = []
-    for i in range(graph.n):
-        for j in range(i,graph.n):
-            if (graph.adjacence[i,j] == 1):
-                edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
-    for i in range(len(edge)):
-        plt.plot(*edge[i],color='black')    
+    #pos = graph.pos
+    #edge = []
+    #for i in range(graph.n):
+    #    for j in range(i,graph.n):
+    #        if (graph.adjacence[i,j] == 1):
+    #            edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
+    #for i in range(len(edge)):
+    #    plt.plot(*edge[i],color='black')    
         
 
     for i in range(graph.n):
@@ -213,6 +222,7 @@ def Unnormalized(k,graph):
     
     
 def Normalized_sym(k,graph):
+    time0=time.time()
     W=graph.adjacence
     n=len(W)    
     s=np.sum(W,0) 
@@ -238,13 +248,122 @@ def Normalized_sym(k,graph):
     T=U/norm.T
     
     cluster=K_MEANS(k,T)
-    
+    print(time.time()-time0)
+  
     
     colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
     
     plt.figure(figsize=[10,10])
     
-    pos = graph.pos
+    #pos = graph.pos
+    #edge = []
+    #for i in range(graph.n):
+    #    for j in range(i,graph.n):
+    #        if (graph.adjacence[i,j] == 1):
+    #            edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
+    #for i in range(len(edge)):
+    #    plt.plot(*edge[i],color='black')    
+        
+
+    for i in range(graph.n):
+        plt.scatter(graph.pos[i][0],graph.pos[i][1],color=colors[int(cluster[i])])
+    
+    plt.show()   
+   
+    return cluster;
+    
+    
+    
+    
+    
+    #    center0+=[data[choix[i]]]
+    
+    it=0
+    
+    while  it<=iter_max:
+        #err_last=err_now
+        err_now=0
+        it+=1
+        dict_clus={}
+        dict_clus_index={}
+        for i in range(k):
+            dict_clus[i]=[]
+            dict_clus_index[i]=[]
+            
+        for i in range(n):
+            cluster=-1
+            min_dis=np.inf
+            for j in range(len(center0)):
+                dis=np.linalg.norm(data[i]-center0[j])
+                if(dis<min_dis):
+                    min_dis=dis
+                    cluster=j
+            err_now+=min_dis
+            
+            dict_clus_index[cluster].append(i)
+            dict_clus[cluster].append(data[i])
+        center1=[]
+        for key in dict_clus:
+            
+            len_cluster=len(dict_clus[key])
+            if(len_cluster==0):
+                continue
+            center1+=[sum(dict_clus[key])/len_cluster]
+        #print(len(center0))
+        if(len(center0)==len(center1) and np.linalg.norm(np.array(center0)-np.array(center1))==0.0):
+            print("OK")
+            break;
+        #print(center0)
+        center0=center1.copy()
+        
+        
+        #if(len(center0)!=k):
+            #choix=np.random.randint(low=0,high=n,size=k)
+        #    center0=data[:k]
+            
+        #    for i in range(k):
+                
+         #       center0+=[data[choix[i]]]
+                
+        print(len(center0))
+        
+
+        
+           
+    return dict_clus,dict_clus_index    
+ 
+def UnnormSpectralCluster(k,graph):
+    W=graph.adjacence
+    n=len(W)
+    
+    s=np.sum(W,0)
+    
+    D=np.zeros((n,n))
+    for i in range(n):
+        D[i,i]=s[i]
+        
+    L=D-W
+    temp=np.linalg.eig(L)
+    
+    value,vector= np.real(temp[0]),np.real(temp[1])
+    
+    for i in range(n):
+        for j in range(i+1,n):
+            if(value[i]>value[j]):
+                temp=value[i]
+                value[i]=value[j]
+                value[j]=temp
+                vector[:,i],vector[:,j]=vector[:,j],vector[:,i]
+    U=vector[:,:k]
+    
+    dict_cluster_y, dict_cluster_index=k_means(k,U)
+    for k in dict_cluster_index.keys():
+        print(len(dict_cluster_index[k]))
+    colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
+    
+    plt.figure(figsize=[10,10])
+    
+    pos = graph.pos#np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
     edge = []
     for i in range(graph.n):
         for j in range(i,graph.n):
@@ -253,14 +372,13 @@ def Normalized_sym(k,graph):
     for i in range(len(edge)):
         plt.plot(*edge[i],color='black')    
         
-
-    for i in range(graph.n):
-        plt.scatter(graph.pos[i][0],graph.pos[i][1],color=colors[int(cluster[i])])
+    i=0   
+    for key in dict_cluster_index.keys():
+        
+        for p in dict_cluster_index[key]:
+            plt.scatter(graph.pos[p][0],graph.pos[p][1],color=colors[i])
+        i+=1;
+        
     
     plt.show()   
-    return cluster;
-    
-    
-    
-    
-    
+    return;
