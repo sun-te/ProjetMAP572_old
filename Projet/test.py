@@ -74,6 +74,17 @@ graph.reload(Adjacency.CompleteMatrix(M))
 graph.GPO_Armijio()
 graph.Visual(draw_edge=True)
 print(scores)
+
+#%%
+#4.2
+#test sur graph attachement preferentiel
+n=20
+graph=Graph.grapheG()
+graph.reload(Adjacency.matrix_delta(n,2.0))
+scores=PageRank.Scores(graph.adjacence,eps=0)
+graph.GPO_Armijio(itermax=200)
+graph.Visual(draw_edge=True)
+print(scores)
 #%%   
 
 '''Part 3'''
