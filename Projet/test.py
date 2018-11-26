@@ -67,12 +67,12 @@ M = np.array([[1,0,0,0,0,0,0,0,0,0,0],
               [0,1,0,0,1,0,0,0,0,0,0]
             ]).T
 
-
 graph=Graph.grapheG()
 graph.reload(M)
+scores=PageRank.Scores(graph.adjacence,eps=0.15)
+graph.reload(Adjacency.CompleteMatrix(M))
 graph.GPO_Armijio()
 graph.Visual(draw_edge=True)
-scores=PageRank.Scores(graph.adjacence,eps=0.15)
 print(scores)
 #%%   
 
