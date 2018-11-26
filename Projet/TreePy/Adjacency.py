@@ -15,6 +15,7 @@ __status__ = "Test"
 
 import numpy as np
 
+
 def matrix_delta(n,delta=0):
     n=int(n)
     ans = np.zeros((n,n))
@@ -48,7 +49,14 @@ def RenomalizedMatrix(A):
     degree=np.sum(A,0)
     for i in range(len(A)):
         A[i,:]/=degree[i];
-        
 
+def CompleteMatrix(A):
+    l = len(A)
+    B = A.copy()
+    for i in range(l):
+        for j in range(l):
+            if B[j,i]>0:
+                B[i,j]=1
+    return B
 
 
