@@ -57,7 +57,7 @@ def Matrix_DIRECTED(n,delta=0):
             if(flag<=proba[j]):
                 v=j
                 break
-        ans[i,v] = 1
+        ans[v,i] = 1
         degree=np.sum(ans,axis=1)
     
     
