@@ -20,7 +20,7 @@ class grapheG:
     def __init__(self,n=1):
         self.n=n
         self.adjacence=np.zeros((n,n))   
-        self.edge=np.zeros((n,1))
+        #self.edge=np.zeros((n,1))
         self.pos=np.array([[np.random.uniform(0,1),np.random.uniform(0,1)] for i in range(self.n)])
         self.distance=np.zeros((n,n))
 
@@ -28,12 +28,13 @@ class grapheG:
         self.__init__(len(A))
         self.adjacence=A
         self.distance = self.Distance()
-        for i in range(self.n):
+        '''for i in range(self.n):
             for j in range(self.n):
                 if A[i,j]>0:
                     v = j
                     break
             self.edge[v] = i;
+        '''
 
     def Distance(self):
         n=self.n
@@ -69,7 +70,7 @@ class grapheG:
         Yminus=(y.T-y)**2
         B=np.sqrt(Xminus+Yminus)/np.sqrt(2)
         M=matrix_distance
-        temp=(B-M)/M
+        temp=(B-M)[np.where(M!=0)]/M[np.where(M!=0)]
         E=np.sum(temp*temp)
         return E
 
@@ -103,26 +104,76 @@ class grapheG:
         self.pos=pos1
         self.Visual()
 
-    def One2Two(self,x):
-        l=int(len(x)/2)
-        res=np.array([x[0:l],x[l:]]).T
-        return res
-
-    def Two2One(self,pos):
-        return np.append(pos[:,0],pos[:,1])
 
     def Gradiant_1d(self,x,epsilon=1.e-4):
-        l=len(x)
+        n=self.n
+        l=n*2
         grad=np.zeros(l)
-        E0=self.Energy(self.One2Two(x))
+        
+        increment=np.zeros(l)
+        E0=self.Energy(x.reshape((n,2)))
         for i in range(l):
-            increment=np.zeros(l)
             increment[i]=epsilon
-            grad[i]=(self.Energy(self.One2Two(x+increment))-E0)/epsilon
+            grad[i]=(self.Energy((x+increment).reshape((n,2)))-E0)/epsilon
+            increment[i]=0
         return grad
 
-    def GPO(self,itermax=1000,tol=1.e-4):
-        x0=self.Two2One(self.pos)
+    def GPO_Armijio(self,itermax=1000,tol=1.e-4):
+        n=self.n
+        iteration=0
+        residu=np.inf
+        u=self.pos.reshape(n*2)
+        while (iteration<itermax and residu>tol):
+            w=self.Gradiant_1d(u)
+            residu=w.dot(w)
+            E0=self.Energy(u.reshape((n,2)))            
+            rho=1
+            while self.Energy((u-rho*w).reshape((n,2)))>E0-rho*0.0001*residu:#armijio critère, recherche linéaire
+                rho*=0.8
+            u-=rho*w
+            iteration+=1
+            if(iteration%5==0):
+                print("iteration, residu, d(步长): ",iteration, residu,rho)
+                #if(iteration%200==0):
+                self.pos=u.reshape((n,2))
+                self.Visual(draw_edge=False)
+        print(iteration,residu,rho)        
+        self.pos=u.reshape((n,2))
+        self.Visual(draw_edge=False)
+        
+    def Visual(self,draw_edge=True):
+        plt.figure(figsize=[6,6])
+        pos = self.pos
+        edge = set()
+        for i in range(self.n):
+            for j in range(self.n):
+                if (i!=j and self.adjacence[i,j] >1.e-5):
+                    x1,x2=pos[i][0],pos[j][0]
+                    y1,y2=[pos[i][1],pos[j][1]]
+                    if(x1>x2):
+                        x1,x2=x2,x1
+                        y1,y2=y2,y1
+                    edge.add(((x1,x2),(y1,y2)))
+        edge=list(edge)
+        if(draw_edge):
+            for i in range(len(edge)):
+                plt.plot(*edge[i])
+            for i in range(self.n):
+                plt.annotate(s=i ,xy=(pos[i]))
+        plt.scatter(pos.T[0],pos.T[1])
+        #
+        plt.show()
+
+    def VisualCluster(self,cluster):
+        plt.figure(figsize=[8,8])
+        pos = self.pos
+        colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
+        for i in range(len(pos)):    
+            plt.scatter(pos[i][0],pos[i][1],color=colors[int(cluster[i])])
+            
+
+    def GPO_d(self,itermax=1000,tol=1.e-4):
+        x0=self.pos.reshape(self.n*2)
         residu=np.inf
         iteration=0
         d=1.e-4
@@ -132,7 +183,7 @@ class grapheG:
             iteration+=1
             x1=x0-d*(grad0)
             grad1=self.Gradiant_1d(x1)
-            E1=self.Energy(self.One2Two(x1))
+            E1=self.Energy(x1.reshape((self.n, 2)))
             residu=np.abs(E1-E0)
             dp=(x1-x0)
             dD=(grad1-grad0)
@@ -140,33 +191,11 @@ class grapheG:
             grad0=grad1
             x0=x1
             E0=E1
-            if(iteration%50==0):
+            if(iteration%5==0):
                 print("iteration, residu, d(步长): ",iteration, residu,d)
                 #if(iteration%200==0):
-                self.pos=self.One2Two(x1)
-                self.Visual()
+                self.pos=x1.reshape((self.n, 2))
+                self.Visual(draw_edge=False)
         print(iteration, residu,d)        
-        self.pos=self.One2Two(x1)
-        self.Visual()
-        
-    def Visual(self):
-        plt.figure(figsize=[6,6])
-        pos = self.pos
-        edge = []
-        for i in range(self.n):
-            for j in range(i,self.n):
-                if (i!=j and self.adjacence[i,j] == 1):
-                    edge.append(([pos[i][0],pos[j][0]],[pos[i][1],pos[j][1]]))
-        #for i in range(len(edge)):
-        #    plt.plot(*edge[i])
-        plt.scatter(pos.T[0],pos.T[1])
-        #for i in range(self.n):
-        #    plt.annotate(s=i ,xy=(pos[i]))
-        plt.show()
-
-    def VisualCluster(self,cluster):
-        plt.figure(figsize=[8,8])
-        pos = self.pos
-        colors=['red','blue','green','brown','purple','black','yellow','orange','pink']
-        for i in range(len(pos)):    
-            plt.scatter(pos[i][0],pos[i][1],color=colors[int(cluster[i])])
+        self.pos=x1.reshape((self.n, 2))
+        self.Visual(draw_edge=False)
