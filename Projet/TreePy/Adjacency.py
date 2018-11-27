@@ -16,7 +16,7 @@ __status__ = "Test"
 import numpy as np
 
 
-def matrix_delta(n,delta=0):
+def Matrix_delta(n,delta=0):
     n=int(n)
     ans = np.zeros((n,n))
     ans[0,0] = 1;
@@ -32,7 +32,7 @@ def matrix_delta(n,delta=0):
         degree=np.sum(ans,axis=0)
     return ans
   
-def matrix_SBM(partition,Q):
+def Matrix_SBM(partition,Q):
     n = len(partition)
     ans = np.zeros((n,n))
     for i in range(n):
