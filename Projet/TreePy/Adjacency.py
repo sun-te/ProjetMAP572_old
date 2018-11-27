@@ -15,7 +15,6 @@ __status__ = "Test"
 
 import numpy as np
 
-
 def Matrix_delta(n,delta=0):
     n=int(n)
     ans = np.zeros((n,n))
@@ -45,10 +44,34 @@ def Matrix_SBM(partition,Q):
                 ans[i,j],ans[j,i] = 1,1
     return ans
 
+def Matrix_DIRECTED(n,delta=0):
+    n=int(n)
+    ans = np.zeros([n,n])
+    ans[0,0] = 1;
+    degree = np.array([1])
+    for i in range(1,n):
+        proba=np.cumsum((degree+delta)/(2*i-1+i*delta))
+        print(proba)
+        flag=np.random.uniform(0,1)
+        for j in range(len(proba)):
+            if(flag<=proba[j]):
+                v=j
+                break
+        ans[i,v] = 1
+        degree=np.sum(ans,axis=1)
+    
+    
+    return ans
+    
+    
+    
+    
 def RenomalizedMatrix(A):
     degree=np.sum(A,0)
     for i in range(len(A)):
         A[i,:]/=degree[i];
+        
+
 
 def CompleteMatrix(A):
     l = len(A)
@@ -58,5 +81,3 @@ def CompleteMatrix(A):
             if B[j,i]>0:
                 B[i,j]=1
     return B
-
-
